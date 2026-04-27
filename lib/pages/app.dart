@@ -17,11 +17,18 @@ class App extends StatelessWidget {
   Future<void> openUrl() async {
     final Uri url = Uri.parse("https://porlobiit.com/");
 
-    if (!await launchUrl(
-      url,
-      mode: LaunchMode.externalApplication, // opens in browser
-    )) {
-      throw 'Could not launch $url';
+    if (await canLaunchUrl(url)) {
+
+      try{
+        await launchUrl(
+          url,
+          mode: LaunchMode.externalApplication,
+        );
+      }catch(e){
+        throw 'Could not launch $url';
+      }
+
+      //
     }
   }
   @override
