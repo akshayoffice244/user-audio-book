@@ -18,6 +18,7 @@ void main()  async{
   // final ttsService = LocalTTSService();
   runApp(
     MaterialApp(
+      debugShowCheckedModeBanner: false,
       home:App(),
     ),
   );
