@@ -1,104 +1,221 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:use_audio_book/viewmodel/ocr_viewmodel.dart';
+import 'package:use_audio_book/pages/ocr_screen.dart';
 
-class OCRScreen extends StatefulWidget {
-  const OCRScreen({super.key});
+import '../service/ai_service.dart';
+import '../service/audioservice.dart';
+import '../service/imageservice.dart';
+import '../service/localtts_service.dart';
+import '../service/ocr_service.dart';
+import '../viewmodel/ocr_viewmodel.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-  @override
-  State<OCRScreen> createState() => _OCRScreenState();
-}
+class App extends StatelessWidget {
+  const App({super.key});
 
-class _OCRScreenState extends State<OCRScreen> {
+  static const colorPrimary = Color(0xff5b4da0);
+  Future<void> openUrl() async {
+    final Uri url = Uri.parse("https://porlobiit.com/");
+
+    if (!await launchUrl(
+      url,
+      mode: LaunchMode.externalApplication, // opens in browser
+    )) {
+      throw 'Could not launch $url';
+    }
+  }
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<OCRViewModel>();
     return Scaffold(
-      appBar: AppBar(title: Text("User Audio Book",
-      style: TextStyle(color: Colors.white),),
-        backgroundColor: Colors.blueAccent,),
-
-      body: Container(
-        width: MediaQuery.of(context).size.width,
-        margin: EdgeInsets.fromLTRB(10, 0, 10, 20),
-        color: Colors.white,
-        child: Column(
-
-          spacing: 10,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                print(vm.isLoading);
-                if (vm.isLoading != null && !vm.isLoading!) {
-                  print("button is clicked");
-                  vm.pickAndExtractText();
-                }
-              },
-              child: Text("Pick an Image"),
-            ),
-
-            if (vm.isLoading != null && vm.isLoading!)
-              CircularProgressIndicator(),
-
-            if(vm.image != null) Image.file(vm.image!, height: 100,),
-            SizedBox(height: 10),
-
-            Expanded(
-              child: SingleChildScrollView(
-                child: Text(vm.text != null ? vm.text! : ""),
-              ),
-            ),
-
-            SizedBox(height: 10),
-
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(onPressed: vm.audioState == AudioState.loading
-                    ? null
-                    : vm.pauseAudio, icon: Icon(Icons.pause)),
-                IconButton(onPressed: vm.audioState == AudioState.loading
-                    ? null
-                    : vm.playAudio, icon: Icon(Icons.play_arrow)),
-                IconButton(onPressed: vm.audioState == AudioState.loading
-                    ? null
-                    : vm.stopAudio, icon: Icon(Icons.stop))
-
-              ],
-            )
-           ,
-
-            SizedBox(height: 10),
-
-            if (vm.audioState == AudioState.loading)
-              Column(
-                children: [
-                  CircularProgressIndicator(),
-                  Text("Generating voice..."),
-                ],
-              ),
-
-            if (vm.mode != null && vm.mode!.isNotEmpty)
-              Text("Mode: ${vm.mode}"),
-
-            if (vm.errorMessage !=  null && vm.errorMessage!.isNotEmpty)
-              Container(
-                padding: EdgeInsets.all(10),
-                margin: EdgeInsets.only(top: 10),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(vm.errorMessage !=  null ? vm.errorMessage! : ""),
-              ),
-
-
-
-
-          ],
+      appBar: AppBar(
+        //<a href="https://www.flaticon.com/free-icons/open-book" title="open book icons">Open book icons created by Freepik - Flaticon</a>
+        leading: Container(
+          padding: EdgeInsets.all(10),
+          child: Image.asset("assets/images/open-book.png"),
         ),
+        title: Text(
+          "Make your audio Book",
+          style: TextStyle(
+            fontFamily: "Plus Jakarta Sans",
+            color: Colors.white,
+          ),
+        ),
+
+        backgroundColor: colorPrimary,
+      ),
+      body: Row(
+        children: [
+          Expanded(
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: (){
+                    final imageService = ImageService();
+                    final ocrService = OCRService();
+                    final aiService = AIService();
+                    final audioService = AudioService();
+                    final ttsService = LocalTTSService();
+
+                    Navigator.push(context, MaterialPageRoute(builder: (C)=>  ChangeNotifierProvider(
+                      create: (_) => OCRViewModel(
+                        imageService: imageService,
+                        ocrService: ocrService,
+                        aiService: aiService,
+                        audioService: audioService,
+                        ttsService: ttsService,
+                      ),
+
+                      child: OCRScreen(),
+                    )));
+                  },
+                  child: Card(
+                    child: Container(
+                      height: 150,
+                      padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+                      child: Row(
+                        spacing: 20,
+                        children: [
+                          CircleAvatar(
+                            radius: 40,
+                            //<a href="https://www.flaticon.com/free-icons/audiobook" title="audiobook icons">Audiobook icons created by chahir - Flaticon</a>
+                            child: Image.asset("assets/images/audio-book.png"),
+                          ),
+                          Expanded(
+                            child: Container(
+                              child: Text(
+                                "Create and Listen to favourite audio book",
+                                textAlign: TextAlign.left,
+                                style: TextStyle(
+                                  fontFamily: "Poppins",
+                                  fontSize: 15,
+                                  fontWeight: FontWeight(500),
+                                  color: Colors.blueAccent,
+                                ),
+                              ),
+                            ),
+                          ),
+                          CircleAvatar(
+                            radius: 20,
+                            //<a href="https://www.flaticon.com/free-icons/pointer" title="pointer icons">Pointer icons created by Alfredo Creates - Flaticon</a>
+                            child: Image.asset("assets/images/arrow.png"),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                //<a href="https://www.flaticon.com/free-icons/conversation" title="conversation icons">Conversation icons created by max.icons - Flaticon</a>
+                GestureDetector(
+                  onTap: () async {
+                        await openUrl();
+                  },
+                  child: Card(
+                    child: Container(
+                      height: 230,
+                      padding: EdgeInsets.fromLTRB(15, 5, 5,5),
+                      child: Row(
+                        // mainAxisAlignment: MainAxisAlignment.center,
+                        spacing: 20,
+                        children: [
+                          Container(
+                            child: CircleAvatar(
+                              radius: 40,
+                              child: Image.asset(
+                                "assets/images/conversation.png",
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              spacing: 10,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  "Gain industrial experience",
+                                  //   textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: "Plus Jakarta Sans",
+                                    fontSize: 18,
+                                    fontWeight: FontWeight(800),
+                                    color: colorPrimary,
+                                  ),
+                                ),
+
+                                RichText(
+                                  text: TextSpan(
+
+                                    children: [
+                                      TextSpan(
+                                        text:
+                                            "Join our IT courses with guaranteed ",
+                                        style: TextStyle(
+                                          fontFamily: "Poppins",
+                                          fontSize: 15,
+                                          fontWeight: FontWeight(500),
+                                          color: colorPrimary,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: "Internship",
+                                        style: TextStyle(
+                                          fontFamily: "Poppins",
+                                          fontSize: 15,
+                                          fontWeight: FontWeight(700),
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                RichText(
+                                  textAlign: TextAlign.left,
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: "Click to join courses",
+                                        style: TextStyle(
+                                          fontFamily: "Poppins",
+                                          fontSize: 15,
+                                          fontWeight: FontWeight(500),
+                                          color: colorPrimary,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: " @ ",
+                                        style: TextStyle(
+                                          fontFamily: "Poppins",
+                                          fontSize: 15,
+                                          fontWeight: FontWeight(700),
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+
+                                      TextSpan(
+                                        text: "Porlob Institute Of Technology",
+                                        style: TextStyle(
+                                          fontFamily: "Poppins",
+                                          fontSize: 15,
+                                          fontWeight: FontWeight(700),
+                                          color: Colors.deepPurpleAccent,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
